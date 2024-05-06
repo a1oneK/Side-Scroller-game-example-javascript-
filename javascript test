@@ -1,0 +1,148 @@
+javascript:(function(){
+    const gameWindow = window.open('', 'Mario_Game', 'width=800,height=400');
+    const gameHTML = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Mario Clone</title>
+            <style>
+                body {
+                    margin: 0;
+                    overflow: hidden;
+                    background-color: #63c4ff;
+                }
+                #player {
+                    position: absolute;
+                    width: 20px;
+                    height: 50px;
+                    background-color: black;
+                    bottom: 0;
+                    left: 0;
+                }
+                .block {
+                    position: absolute;
+                    width: 50px;
+                    height: 50px;
+                    background-color: brown;
+                    bottom: 0;
+                }
+                .bird {
+                    position: absolute;
+                    width: 50px;
+                    height: 30px;
+                    background-color: yellow;
+                    bottom: 150px; /* Adjusted position */
+                    transition: left 5s linear, transform 1s linear;
+                }
+            </style>
+        </head>
+        <body>
+            <div id="player"></div>
+            <h1 id="gameOver" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: sans-serif; color: red;">Game Over</h1>
+            <script>
+                function startGame() {
+                    const player = document.getElementById("player");
+                    const gameOverText = document.getElementById("gameOver");
+                    let isJumping = false;
+                    let gravity = 0.9;
+                    let jumpCount = 0;
+                    let hitCount = 0;
+
+                    function createBlock() {
+                        const block = document.createElement('div');
+                        block.classList.add('block');
+                        block.style.left = '800px';
+                        document.body.appendChild(block);
+                        const blockInterval = setInterval(() => {
+                            let left = parseInt(window.getComputedStyle(block).getPropertyValue('left'));
+                            if (left <= -50) {
+                                clearInterval(blockInterval);
+                                document.body.removeChild(block);
+                            }
+                            left -= 10;
+                            block.style.left = left + 'px';
+                            if (left <= 20 && left >= -20) {
+                                let playerBottom = parseInt(window.getComputedStyle(player).getPropertyValue("bottom"));
+                                if (playerBottom <= 50) {
+                                    clearInterval(blockInterval);
+                                    document.body.removeChild(block);
+                                    hitCount++;
+                                    if (hitCount >= 2) {
+                                        gameOver();
+                                    }
+                                }
+                            }
+                        }, 50);
+                    }
+
+                    function createBird() {
+                        const bird = document.createElement('div');
+                        bird.classList.add('bird');
+                        bird.style.left = '800px';
+                        document.body.appendChild(bird);
+                        bird.addEventListener("transitionend", () => {
+                            bird.remove();
+                        });
+                        setTimeout(() => {
+                            bird.style.transform = "translateY(-50px)"; /* Adjusted position */
+                        }, 500);
+                        setTimeout(() => {
+                            bird.style.left = "-50px";
+                        }, 1000);
+                    }
+
+                    setInterval(createBlock, 2000);
+                    setInterval(createBird, 5000);
+
+                    function jump() {
+                        let jumpInterval = setInterval(() => {
+                            let playerBottom = parseInt(window.getComputedStyle(player).getPropertyValue("bottom"));
+                            if (playerBottom >= 200) {
+                                clearInterval(jumpInterval);
+                                let fallInterval = setInterval(() => {
+                                    if (playerBottom <= 0) {
+                                        clearInterval(fallInterval);
+                                        isJumping = false;
+                                        jumpCount = 0;
+                                    }
+                                    player.style.bottom = playerBottom + "px";
+                                    playerBottom -= gravity * 20;
+                                }, 20);
+                            }
+                            player.style.bottom = playerBottom + 30 + "px";
+                        }, 20);
+                    }
+
+                    document.addEventListener("keydown", event => {
+                        if (event.code === "Space" && !isJumping && jumpCount < 2) {
+                            isJumping = true;
+                            jump();
+                            jumpCount++;
+                        }
+                        if (event.code === "ArrowDown") {
+                            player.style.height = "30px";
+                        }
+                    });
+
+                    document.addEventListener("keyup", event => {
+                        if (event.code === "ArrowDown") {
+                            player.style.height = "50px";
+                        }
+                    });
+
+                    function gameOver() {
+                        gameOverText.style.display = "block";
+                        setTimeout(() => {
+                            window.close();
+                        }, 2000);
+                    }
+                }
+                startGame();
+            </script>
+        </body>
+        </html>
+    `;
+    gameWindow.document.write(gameHTML);
+})();
